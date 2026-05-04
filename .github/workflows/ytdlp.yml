@@ -1,0 +1,63 @@
+name: Download Audio from YouTube via yt-dlp
+
+# HOW TO USE:
+# Open a GitHub Issue with title:  ytdlp: https://youtube.com/watch?v=XXXXXX
+# The workflow downloads the audio as MP3, commits it to music/, and closes the issue.
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  download:
+    # Only run when issue title starts with "ytdlp:"
+    if: startsWith(github.event.issue.title, 'ytdlp:')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yt-dlp
+        uses: AnimMouse/setup-yt-dlp@v3
+
+      - name: Extract URL from issue title
+        id: extract
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          URL="${TITLE#ytdlp: }"
+          URL="${URL#ytdlp:}"
+          URL="${URL## }"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Download audio
+        run: |
+          mkdir -p music
+          yt-dlp \
+            --extract-audio \
+            --audio-format mp3 \
+            --audio-quality 192K \
+            --output "music/%(title)s.%(ext)s" \
+            --no-playlist \
+            "${{ steps.extract.outputs.url }}"
+
+      - name: Commit new audio file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add music/
+          git diff --cached --quiet && echo "No new files" && exit 0
+          git commit -m "feat: add song via yt-dlp from issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Comment and close issue
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment: |
+            ✅ Done! The audio has been downloaded and added to the `music/` folder.
+            The site will rebuild automatically and the new track will appear in your playlist.
