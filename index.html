@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediaPlayer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">♫</div>
+        <span class="logo-text">MediaPlayer</span>
+      </div>
+      <button class="btn-guide" id="btnGuide">⚙ Setup Guide</button>
+    </div>
+  </header>
+
+  <!-- Setup Guide Modal -->
+  <div class="modal-overlay hidden" id="guideModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Setup Guide</h2>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="guide-section">
+          <h3>1. Add Your Music</h3>
+          <p>Put your audio/video files in the <code>music/</code> folder of your repo. Supported formats: <code>.mp3 .ogg .wav .flac .aac .m4a .mp4 .webm</code></p>
+          <p>The GitHub Actions workflow auto-generates <code>music/index.json</code> on every push, so the player finds your files automatically.</p>
+        </div>
+        <div class="guide-section">
+          <h3>2. Enable GitHub Pages</h3>
+          <ol>
+            <li>Go to your repo → <strong>Settings → Pages</strong></li>
+            <li>Under Source, choose <strong>GitHub Actions</strong></li>
+            <li>Push any commit — the deploy workflow runs automatically</li>
+            <li>Your site: <code>https://&lt;username&gt;.github.io/&lt;repo&gt;</code></li>
+          </ol>
+        </div>
+        <div class="guide-section">
+          <h3>3. Add Songs via YouTube (yt-dlp)</h3>
+          <p>Open a GitHub Issue with the title:</p>
+          <pre>ytdlp: https://youtube.com/watch?v=...</pre>
+          <p>The Actions workflow downloads the audio as MP3 and commits it to <code>music/</code> automatically.</p>
+        </div>
+        <div class="guide-section">
+          <h3>4. Export / Import Playlist Order</h3>
+          <p><strong>Export:</strong> Click the ↓ button in the playlist header to save your track order as <code>playlist.json</code>.</p>
+          <p><strong>Import:</strong> Click ↑ and select a saved <code>playlist.json</code> to restore that order.</p>
+        </div>
+        <div class="guide-section">
+          <h3>5. Drag &amp; Drop Reorder</h3>
+          <p>Grab the <strong>⠿ grip</strong> on any track row and drag it to a new position. The order persists in your browser and can be exported.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <main>
+    <!-- Player column -->
+    <div class="player-col">
+      <!-- Video element (shown when a video is playing) -->
+      <div class="video-wrap hidden" id="videoWrap">
+        <video id="videoEl" playsinline></video>
+      </div>
+
+      <!-- Album art (shown for audio) -->
+      <div class="art-wrap" id="artWrap">
+        <div class="vinyl" id="vinyl">
+          <div class="vinyl-groove g1"></div>
+          <div class="vinyl-groove g2"></div>
+          <div class="vinyl-groove g3"></div>
+          <div class="vinyl-label">♫</div>
+        </div>
+      </div>
+
+      <!-- Hidden audio element -->
+      <audio id="audioEl"></audio>
+
+      <!-- Now playing -->
+      <div class="now-playing">
+        <p class="track-name" id="trackName">No track selected</p>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-row">
+        <span class="time" id="currentTime">0:00</span>
+        <div class="progress-bar-wrap">
+          <input type="range" id="seekBar" min="0" max="100" value="0" step="0.1" />
+        </div>
+        <span class="time" id="totalTime">0:00</span>
+      </div>
+
+      <!-- Transport controls -->
+      <div class="transport">
+        <button class="ctrl-btn sm" id="btnShuffle" title="Shuffle">⇄</button>
+        <button class="ctrl-btn" id="btnPrev" title="Previous">⏮</button>
+        <button class="ctrl-btn play" id="btnPlay" title="Play/Pause">▶</button>
+        <button class="ctrl-btn" id="btnNext" title="Next">⏭</button>
+        <button class="ctrl-btn sm" id="btnRepeat" title="Repeat">↺</button>
+      </div>
+
+      <!-- Stop + Volume -->
+      <div class="volume-row">
+        <button class="ctrl-btn xs" id="btnStop" title="Stop">■</button>
+        <button class="ctrl-btn xs" id="btnMute" title="Mute">🔊</button>
+        <input type="range" id="volBar" min="0" max="1" step="0.01" value="0.8" />
+        <span class="vol-label" id="volLabel">80</span>
+      </div>
+    </div>
+
+    <!-- Playlist column -->
+    <div class="playlist-col">
+      <div class="playlist-header">
+        <div class="playlist-title">
+          <span class="pl-icon">♬</span>
+          <span>Playlist</span>
+          <span class="track-count" id="trackCount">0</span>
+        </div>
+        <div class="pl-actions">
+          <button class="pl-btn" id="btnShuffleList" title="Shuffle list order">⇄</button>
+          <label class="pl-btn" title="Import playlist JSON">
+            ↑
+            <input type="file" id="importFile" accept=".json" class="hidden-input" />
+          </label>
+          <button class="pl-btn" id="btnExport" title="Export playlist JSON">↓</button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="searchInput" placeholder="Search tracks..." />
+      </div>
+
+      <!-- Track list -->
+      <ul class="track-list" id="trackList">
+        <li class="empty-state" id="emptyState">
+          <span>🎵</span>
+          <p>No tracks loaded</p>
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- Demo banner -->
+  <div class="demo-banner hidden" id="demoBanner">
+    <span>📁</span>
+    <div>
+      <strong>Demo Mode</strong> — No <code>music/</code> folder detected.
+      Deploy this site to GitHub Pages and add your files to the <code>music/</code> folder.
+      Click <strong>Setup Guide</strong> for instructions.
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
