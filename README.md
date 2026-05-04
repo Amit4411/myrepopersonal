@@ -16,12 +16,11 @@ If you're reading this on my repository page and want to support me, please do.
 
 You’ll find the **Support** button on the right side of GitHub.
 
-You can also support me through:
+You can also support me through [Ko-fi](https://ko-fi.com/corruptedgames):
 
-- **Ko-fi** (sidebar)
-- Fiverr: **Corrupted_Game**
-
-Need a Minecraft server setup too? 👀
+Need a Minecraft Server Developer too? 👀 
+ - Fiverr: [Corrupted_Game](https://www.fiverr.com/s/xX8Lyyq) or [Discord](https://discord.gg/TRwKtnymhG)
+   Come on Fiverr or Make a ticket on Discord
 
 ---
 
