@@ -38,6 +38,9 @@ So I made this.
 
 A simple GitHub Pages based music player where you can host your own songs for free.
 
+Quick Links
+ - [Setup](https://github.com/CoruptedGames/my-music-player/tree/main#-setup-guide)
+
 ---
 
 # ✨ Features
