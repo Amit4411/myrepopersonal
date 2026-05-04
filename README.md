@@ -85,7 +85,7 @@ Customize playback sequence.
 
 Install:
 
-**GetCookies.txt LOCALLY**
+**[GetCookies.txt LOCALLY](https://chromewebstore.google.com/detail/cclelndahbckbenkjhflpdbgdldlbecc?utm_source=item-share-cb)**
 
 ---
 
@@ -269,7 +269,7 @@ If an action fails while downloading:
 
 That’s exactly why the **start / end** feature exists.
 
-It lets you continue where download stopped.
+It lets you download in small batches.
 
 ---
 
@@ -307,7 +307,7 @@ Click:
 
 ---
 
-# Refresh Correctly
+# Refresh Page Correctly
 
 Use:
 
@@ -367,7 +367,7 @@ Done.
 
 # Website URL
 
-`https://YOUR_USERNAME.github.io/REPOSITORY_NAME`
+`https://(YOUR_USERNAME).github.io/(REPOSITORY_NAME/`
 
 ---
 
@@ -397,14 +397,14 @@ Use:
 ---
 
 ## Download Failed
-Refresh cookies
+[Refresh cookies](https://github.com/CoruptedGames/my-music-player/tree/main#if-download-fails)
 
 ---
 
 ## Action Failed Midway
-Resume using:
+Download in batches using:
 
-`start:X end:Y`
+[`start:X end:Y`](https://github.com/CoruptedGames/my-music-player/tree/main#partial-playlist-download)
 
 ---
 
