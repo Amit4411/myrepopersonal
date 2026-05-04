@@ -6,7 +6,7 @@ Tired of YouTube ads after every song?
 
 Same.
 
-That’s why I built **Corrupted Music Player** — a self-hosted music player where **you fully control your songs, videos, playlists, and playback order.**
+That’s why I built **Corrupted Music Player** — a self-hosted music player where **you fully control your songs, playlists, and playback order.**
 
 ---
 
@@ -42,13 +42,13 @@ A simple GitHub Pages based music player where you can host your own songs for f
 
 # ✨ Features
 
-## 🎶 Play Music & Video
+## 🎶 Play Music or MP3
 Supports your personal media library.
 
 ---
 
 ## 📥 Download Directly From YouTube
-Download songs/videos using GitHub Issues.
+Download songs using GitHub Issues.
 
 ---
 
@@ -182,7 +182,7 @@ Go to:
 You will see 2 workflows:
 
 ### Download Audio from YouTube via YTDLP
-Downloads songs/videos
+Downloads songs
 
 ### Deploy Music Player onto GitHub Pages
 Publishes your website
@@ -205,7 +205,7 @@ No description needed.
 
 ---
 
-## Single Song / Video
+## Single Song 
 
 Use:
 
@@ -233,7 +233,7 @@ Use:
 
 `ytdlp: PLAYLIST_LINK start:20 end:24`
 
-This downloads only videos 20 to 24.
+This downloads only videos in mp3 from  20 to 24.
 
 ---
 
