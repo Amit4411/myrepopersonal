@@ -48,30 +48,30 @@ Quick Links
 ## 🎶 Play Music or MP3
 Supports your personal media library.
 
----
+
 
 ## 📥 Download Directly From YouTube
 Download songs using GitHub Issues.
 
----
+
 
 ## 📃 Playlist Download Support
 Download full YouTube playlists.
 
----
+
 
 ## ⏯ Drag & Reorder Songs
 Customize playback sequence.
 
----
+
 
 ## 🔀 Shuffle Playlist
 
----
+
 
 ## 💾 Import / Export Playlist Order
 
----
+
 
 ## 🌐 Hosted Free on GitHub Pages
 
