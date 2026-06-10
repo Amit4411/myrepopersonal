@@ -1,0 +1,157 @@
+name: Download Audio/Video from YouTube via yt-dlp
+
+# HOW TO USE:
+# Audio (MP3):      ytdlp: https://youtu.be/XXXXX
+# Video 480p (MP4): ytdlp: https://youtu.be/XXXXX format:video
+# Video 720p (MP4): ytdlp: https://youtu.be/XXXXX format:video quality:720
+# Video 360p (MP4): ytdlp: https://youtu.be/XXXXX format:video quality:360
+# Full playlist:    ytdlp: https://youtube.com/playlist?list=XXXXX
+# Batch range:      ytdlp: https://youtube.com/playlist?list=XXXXX start:1 end:60
+#
+# ⚠️  GitHub has a 100 MB file size limit per file.
+#     480p is the safe default. 720p may exceed 100 MB for videos > 5 min.
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  download:
+    if: startsWith(github.event.issue.title, 'ytdlp:')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yt-dlp
+        uses: AnimMouse/setup-yt-dlp@v3
+
+      - name: Parse issue title
+        id: parse
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+
+          # Remove the "ytdlp:" prefix
+          REST="${TITLE#ytdlp:}"
+          REST="${REST## }"
+
+          # Extract start: and end: if present
+          START=$(echo "$REST" | grep -oP 'start:\K[0-9]+' || echo "")
+          END=$(echo   "$REST" | grep -oP 'end:\K[0-9]+'   || echo "")
+
+          # Extract format: if present (audio or video), default to audio
+          FORMAT="audio"
+          if echo "$REST" | grep -qi 'format:video'; then
+            FORMAT="video"
+          fi
+
+          # Extract quality: (360, 480, 720, 1080), default 480 for video
+          QUALITY=$(echo "$REST" | grep -oP 'quality:\K[0-9]+' || echo "")
+          if [ -z "$QUALITY" ]; then QUALITY="480"; fi
+
+          # Extract the URL (first word that starts with http)
+          URL=$(echo "$REST" | grep -oP 'https?://[^ ]+' | head -1)
+
+          echo "url=$URL"         >> $GITHUB_OUTPUT
+          echo "start=$START"     >> $GITHUB_OUTPUT
+          echo "end=$END"         >> $GITHUB_OUTPUT
+          echo "format=$FORMAT"   >> $GITHUB_OUTPUT
+          echo "quality=$QUALITY" >> $GITHUB_OUTPUT
+
+          echo "Parsed → URL: $URL | format: $FORMAT | quality: ${QUALITY}p | start: $START | end: $END"
+
+      - name: Download
+        run: |
+          mkdir -p music
+
+          URL="${{ steps.parse.outputs.url }}"
+          START="${{ steps.parse.outputs.start }}"
+          END="${{ steps.parse.outputs.end }}"
+          FORMAT="${{ steps.parse.outputs.format }}"
+
+          # Build optional playlist range flags
+          RANGE_FLAGS=""
+          if [ -n "$START" ]; then RANGE_FLAGS="$RANGE_FLAGS --playlist-start $START"; fi
+          if [ -n "$END"   ]; then RANGE_FLAGS="$RANGE_FLAGS --playlist-end $END";   fi
+
+          # Single video (no playlist) — skip playlist flags
+          IS_PLAYLIST=$(echo "$URL" | grep -c "list=" || true)
+          if [ "$IS_PLAYLIST" -eq 0 ] && [ -z "$START" ] && [ -z "$END" ]; then
+            RANGE_FLAGS="--no-playlist"
+          fi
+
+          # ── Cookies setup ──────────────────────────────────
+          COOKIE_FLAGS=""
+          if [ -n "${{ secrets.YOUTUBE_COOKIES }}" ]; then
+            echo "${{ secrets.YOUTUBE_COOKIES }}" > /tmp/cookies_raw.txt
+            # Auto-fix: add Netscape header if missing
+            FIRST=$(head -1 /tmp/cookies_raw.txt)
+            if [[ "$FIRST" != "# Netscape HTTP Cookie File"* ]]; then
+              { echo "# Netscape HTTP Cookie File"; cat /tmp/cookies_raw.txt; } > /tmp/cookies.txt
+            else
+              cp /tmp/cookies_raw.txt /tmp/cookies.txt
+            fi
+            echo "✅ Using cookies from secret"
+            COOKIE_FLAGS="--cookies /tmp/cookies.txt"
+          else
+            echo "⚠️  No YOUTUBE_COOKIES secret — YouTube may block this download"
+          fi
+
+          # ── Download ─────────────────────────────────────────
+          QUALITY="${{ steps.parse.outputs.quality }}"
+          if [ "$FORMAT" = "video" ]; then
+            echo "🎬 Downloading as MP4 video (max ${QUALITY}p)"
+            yt-dlp \
+              -f "bestvideo[height<=${QUALITY}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${QUALITY}]+bestaudio/best[height<=${QUALITY}]" \
+              --merge-output-format mp4 \
+              --output "music/%(title)s.%(ext)s" \
+              --socket-timeout 60 \
+              --retries 5 \
+              --fragment-retries 5 \
+              --no-progress \
+              $COOKIE_FLAGS \
+              $RANGE_FLAGS \
+              "$URL"
+          else
+            echo "🎵 Downloading as MP3 audio"
+            yt-dlp \
+              --extract-audio \
+              --audio-format mp3 \
+              --audio-quality 0 \
+              --output "music/%(title)s.%(ext)s" \
+              --socket-timeout 60 \
+              --retries 5 \
+              --fragment-retries 5 \
+              --no-progress \
+              $COOKIE_FLAGS \
+              $RANGE_FLAGS \
+              "$URL"
+          fi
+
+      - name: Commit downloaded files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add music/
+          git diff --cached --quiet && echo "No new files to commit" && exit 0
+          git commit -m "feat: add media via yt-dlp (issue #${{ github.event.issue.number }})"
+          git push
+
+      - name: Comment and close issue
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment: |
+            ✅ Done! Media has been downloaded and added to the `music/` folder.
+
+            **Details:**
+            - URL: `${{ steps.parse.outputs.url }}`
+            - Format: `${{ steps.parse.outputs.format }}` | Quality: `${{ steps.parse.outputs.quality }}p`
+            - Range: start=`${{ steps.parse.outputs.start }}` end=`${{ steps.parse.outputs.end }}`
+
+            The site will rebuild automatically — refresh your player in ~1 minute to see the new tracks.
